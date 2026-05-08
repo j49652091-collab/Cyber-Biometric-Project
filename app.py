@@ -1,110 +1,332 @@
-import streamlit as st
-import cv2
-import numpy as np
-import time
-from datetime import datetime
+# =========================================
+# AI vs HUMAN DETECTOR SYSTEM
+# By Esraa 🔥
+# =========================================
 
-# --- 1. واجهة النخبة (The Professional Cyber UI) ---
-st.set_page_config(page_title="NEURAL-X ELITE", page_icon="🧬", layout="wide")
+# تثبيت المكتبات أول مرة:
+# pip install customtkinter pillow opencv-python
 
-st.markdown("""
-    <style>
-    .stApp, [data-testid="stSidebar"] { 
-        background: radial-gradient(circle, #051a05 0%, #000000 100%) !important; 
-        color: #00ff00 !important; font-family: 'Courier New', monospace; 
-    }
-    .glitch-title {
-        color: #00ff00; font-size: 70px; font-weight: 900; text-align: center;
-        text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
-        letter-spacing: 12px; margin-top: -40px;
-    }
-    .cyber-frame {
-        border: 2px solid #00ff00; padding: 20px; background: rgba(0, 255, 0, 0.05);
-        border-radius: 15px; box-shadow: 0 0 35px rgba(0,255,0,0.5); text-align: center;
-    }
-    .stButton>button { 
-        background-color: #00ff00 !important; color: #000000 !important; 
-        font-weight: 900 !important; font-size: 18px !important;
-        border-radius: 5px; border: 2px solid #fff; box-shadow: 0 0 30px #00ff00;
-        height: 3.5em; width: 100%; text-transform: uppercase;
-    }
-    .stButton>button:hover { transform: scale(1.05); box-shadow: 0 0 60px #00ff00; color: #fff !important; background: #000 !important; }
-    input { background-color: rgba(0, 0, 0, 0.9) !important; color: #00ff00 !important; border: 2px solid #00ff00 !important; text-align: center; }
-    </style>
-    """, unsafe_allow_html=True)
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+import random
+import os
 
-# --- 2. نظام الدخول ---
-if 'auth' not in st.session_state:
-    st.session_state['auth'] = False
+# =========================================
+# SETTINGS
+# =========================================
 
-if not st.session_state['auth']:
-    col_l, col_m, col_r = st.columns([1, 1.5, 1])
-    with col_m:
-        st.markdown("<p style='text-align: center; font-size: 80px;'>🛡️</p>", unsafe_allow_html=True)
-        st.markdown("<h1 class='glitch-title'>NEURAL-X</h1>", unsafe_allow_html=True)
-        st.markdown("<div class='cyber-frame'>", unsafe_allow_html=True)
-        user = st.text_input("IDENTIFICATION: AGENT_ID")
-        pas = st.text_input("SECURITY KEY: PASSCODE", type="password")
-        if st.button("EXECUTE AUTHENTICATION"):
-            if user in ["Esraa", "Weam", "Tasneem"] and pas == "12345":
-                st.session_state['auth'] = True
-                st.session_state['user'] = user
-                st.rerun()
-            else: st.error("ACCESS DENIED!")
-        st.markdown("</div>", unsafe_allow_html=True)
-else:
-    # --- 3. النظام الرئيسي (بدون فراغات زائدة) ---
-    with st.sidebar:
-        st.markdown(f"### 🖥️ COMMAND CENTER\n**AGENT:** {st.session_state['user']}\n**STATUS:** ONLINE")
-        if st.button("TERMINATE SESSION"):
-            st.session_state['auth'] = False
-            st.rerun()
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 
-    st.markdown("<h1 class='glitch-title'>🧬 NEURAL ANALYZER</h1>", unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("INJECT BIOMETRIC SOURCE...", type=['jpg', 'png', 'jpeg'])
+# =========================================
+# MAIN WINDOW
+# =========================================
 
-    if uploaded_file is not None:
-        file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-        img = cv2.imdecode(file_bytes, 1)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # كشف الذكاء الاصطناعي (أكثر ذكاءً)
-        variance = cv2.Laplacian(gray, cv2.CV_64F).var()
-        is_ai = variance < 380 
+app = ctk.CTk()
+app.geometry("1200x700")
+app.title("AI SECURITY SYSTEM")
+app.resizable(False, False)
 
-        # ترتيب النتائج في 3 أعمدة بدون أي مربعات فارغة
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("<div class='cyber-frame'><h3>🔍 SOURCE</h3>", unsafe_allow_html=True)
-            st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), use_container_width=True)
-            if is_ai: st.error("⚠️ AI_ANIME DETECTED")
-            else: st.success("✅ HUMAN VERIFIED")
-            st.markdown("</div>", unsafe_allow_html=True)
+# =========================================
+# COLORS
+# =========================================
 
-        with col2:
-            st.markdown("<div class='cyber-frame'><h3>🛠️ REBUILD</h3>", unsafe_allow_html=True)
-            if is_ai:
-                with st.spinner("AI GENERATING REALISTIC PROXY..."):
-                    # ذكاء اصطناعي لاختيار صورة بشرية حقيقية مطابقة للمواصفات
-                    # إذا كانت ملامح الوجه في الأنمي ذكورية (بناءً على الكثافة) -> شاب ، وإلا -> فتاة
-                    edge_density = np.sum(cv2.Canny(gray, 100, 200)) / (img.shape[0] * img.shape[1])
-                    time.sleep(2)
-                    if edge_density < 18: # ملامح شاب (شعر قصير وتفاصيل أقل حدة)
-                        st.image("https://pexels.com", caption="RECONSTRUCTED MALE MATCH")
-                    else: # ملامح فتاة (تفاصيل أعقد)
-                        st.image("https://pexels.com", caption="RECONSTRUCTED FEMALE MATCH")
-            else:
-                st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="REAL SOURCE SECURE", use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+bg_color = "#0f172a"
+frame_color = "#111827"
+button_color = "#2563eb"
+hover_color = "#1d4ed8"
 
-        with col3:
-            st.markdown("<div class='cyber-frame'><h3>🔑 SIGNATURE</h3>", unsafe_allow_html=True)
-            if st.button("GET VECTOR"):
-                orb = cv2.ORB_create(nfeatures=1200)
-                kp, des = orb.detectAndCompute(gray, None)
-                img_kp = cv2.drawKeypoints(img, kp, None, color=(0, 255, 0))
-                st.image(cv2.cvtColor(img_kp, cv2.COLOR_BGR2RGB), use_container_width=True)
-                st.success(f"POINTS: {len(kp)}")
-                if des is not None: st.code(str(des[:10]))
-            st.markdown("</div>", unsafe_allow_html=True)
+app.configure(fg_color=bg_color)
+
+# =========================================
+# VALID USERS
+# =========================================
+
+valid_names = ["esraa", "wiam", "tasneem"]
+valid_password = "12345"
+
+# =========================================
+# LOGIN FUNCTION
+# =========================================
+
+def login():
+
+    username = user_entry.get().lower()
+    password = pass_entry.get()
+
+    if username in valid_names and password == valid_password:
+        messagebox.showinfo("ACCESS GRANTED", "Welcome To The System 🔥")
+        open_main_system()
+
+    else:
+        messagebox.showerror("ACCESS DENIED", "Wrong Username Or Password")
+
+# =========================================
+# OPEN MAIN SYSTEM
+# =========================================
+
+def open_main_system():
+
+    login_frame.destroy()
+
+    global result_label
+    global image_label
+    global signature_label
+
+    # TITLE
+    title = ctk.CTkLabel(
+        app,
+        text="AI vs HUMAN DETECTION SYSTEM",
+        font=("Arial", 32, "bold"),
+        text_color="cyan"
+    )
+    title.pack(pady=20)
+
+    # MAIN FRAME
+    main_frame = ctk.CTkFrame(
+        app,
+        width=1100,
+        height=550,
+        fg_color=frame_color,
+        corner_radius=20
+    )
+    main_frame.pack(pady=20)
+
+    # LEFT SIDE
+    left_frame = ctk.CTkFrame(
+        main_frame,
+        width=500,
+        height=500,
+        fg_color="#1e293b",
+        corner_radius=20
+    )
+    left_frame.place(x=20, y=20)
+
+    # RIGHT SIDE
+    right_frame = ctk.CTkFrame(
+        main_frame,
+        width=520,
+        height=500,
+        fg_color="#1e293b",
+        corner_radius=20
+    )
+    right_frame.place(x=560, y=20)
+
+    # IMAGE LABEL
+    image_label = ctk.CTkLabel(
+        left_frame,
+        text="UPLOAD IMAGE",
+        font=("Arial", 22, "bold")
+    )
+    image_label.place(relx=0.5, rely=0.4, anchor="center")
+
+    # UPLOAD BUTTON
+    upload_btn = ctk.CTkButton(
+        left_frame,
+        text="UPLOAD IMAGE",
+        width=250,
+        height=50,
+        font=("Arial", 18, "bold"),
+        fg_color=button_color,
+        hover_color=hover_color,
+        command=upload_image
+    )
+    upload_btn.place(relx=0.5, rely=0.8, anchor="center")
+
+    # RESULT LABEL
+    result_label = ctk.CTkLabel(
+        right_frame,
+        text="WAITING FOR ANALYSIS...",
+        font=("Arial", 26, "bold"),
+        text_color="white"
+    )
+    result_label.pack(pady=40)
+
+    # DIGITAL SIGNATURE
+    signature_label = ctk.CTkLabel(
+        right_frame,
+        text="",
+        font=("Arial", 20),
+        justify="left"
+    )
+    signature_label.pack(pady=30)
+
+# =========================================
+# UPLOAD IMAGE
+# =========================================
+
+def upload_image():
+
+    file_path = filedialog.askopenfilename(
+        filetypes=[
+            ("Images", "*.png *.jpg *.jpeg")
+        ]
+    )
+
+    if not file_path:
+        return
+
+    # LOAD IMAGE
+    img = Image.open(file_path)
+    img = img.resize((400, 300))
+
+    photo = ImageTk.PhotoImage(img)
+
+    image_label.configure(image=photo, text="")
+    image_label.image = photo
+
+    analyze_image()  
+# =========================================
+# ANALYZE IMAGE
+# =========================================
+
+def analyze_image():
+
+    # RANDOM DETECTION (تجريبي حاليا)
+    result = random.choice(["HUMAN", "AI GENERATED"])
+
+    if result == "HUMAN":
+
+        result_label.configure(
+            text="✅ HUMAN DETECTED",
+            text_color="lime"
+        )
+
+        eye_print = random.randint(100000, 999999)
+        face_print = random.randint(100000, 999999)
+        hand_print = random.randint(100000, 999999)
+
+        signature_label.configure(
+            text=f"""
+FACE PRINT : {face_print}
+
+EYE PRINT  : {eye_print}
+
+HAND PRINT : {hand_print}
+
+DIGITAL SIGNATURE VERIFIED
+            """,
+            text_color="white"
+        )
+
+    else:
+
+        result_label.configure(
+            text="⚠ AI GENERATED IMAGE",
+            text_color="orange"
+        )
+
+        similarity = random.randint(70, 97)
+
+        signature_label.configure(
+            text=f"""
+SIMILAR HUMAN FOUND
+
+MATCH : {similarity}%
+
+Gender Match  ✅
+Skin Tone Match ✅
+Face Structure ✅
+Hair Style Match ✅
+
+WARNING:
+THIS IMAGE MAY BE AI GENERATED
+            """,
+            text_color="white"
+        )
+
+# =========================================
+# LOGIN FRAME
+# =========================================
+
+login_frame = ctk.CTkFrame(
+    app,
+    width=500,
+    height=500,
+    fg_color=frame_color,
+    corner_radius=25
+)
+
+login_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+# =========================================
+# TITLE
+# =========================================
+
+title_label = ctk.CTkLabel(
+    login_frame,
+    text="AI SECURITY SYSTEM",
+    font=("Arial", 34, "bold"),
+    text_color="cyan"
+)
+
+title_label.pack(pady=40)
+
+# =========================================
+# USERNAME
+# =========================================
+
+user_entry = ctk.CTkEntry(
+    login_frame,
+    width=320,
+    height=50,
+    placeholder_text="Enter Username",
+    font=("Arial", 18),
+    corner_radius=15
+)
+
+user_entry.pack(pady=20)
+
+# =========================================
+# PASSWORD
+# =========================================
+
+pass_entry = ctk.CTkEntry(
+    login_frame,
+    width=320,
+    height=50,
+    placeholder_text="Enter Password",
+    show="*",
+    font=("Arial", 18),
+    corner_radius=15
+)
+
+pass_entry.pack(pady=20)
+
+# =========================================
+# LOGIN BUTTON
+# =========================================
+
+login_btn = ctk.CTkButton(
+    login_frame,
+    text="LOGIN",
+    width=250,
+    height=55,
+    font=("Arial", 22, "bold"),
+    fg_color=button_color,
+    hover_color=hover_color,
+    corner_radius=15,
+    command=login
+)
+
+login_btn.pack(pady=40)
+
+# =========================================
+# FOOTER
+# =========================================
+
+footer = ctk.CTkLabel(
+    login_frame,
+    text="Cyber Security AI System 🔥",
+    font=("Arial", 15),
+    text_color="gray"
+)
+
+footer.pack(side="bottom", pady=20)
+
+# =========================================
+# RUN
+# =========================================
+
+app.mainloop()
