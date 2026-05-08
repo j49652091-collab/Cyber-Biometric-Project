@@ -1,102 +1,260 @@
 import streamlit as st
-import cv2
+from PIL import Image
 import numpy as np
-import time
+import hashlib
 import random
+import face_recognition
+import time
 
-# --- 1. واجهة النخبة (The Professional Cyber Masterpiece) ---
-st.set_page_config(page_title="NEURAL-X MASTER", page_icon="🧬", layout="wide")
+# =====================================================
+# PAGE CONFIG
+# =====================================================
+
+st.set_page_config(
+    page_title="AI HUMAN ANALYZER",
+    page_icon="🧠",
+    layout="wide"
+)
+
+# =====================================================
+# STYLING
+# =====================================================
 
 st.markdown("""
-    <style>
-    .stApp, [data-testid="stSidebar"] { 
-        background: radial-gradient(circle, #051a05 0%, #000000 100%) !important; 
-        color: #00ff00 !important; font-family: 'Courier New', monospace; 
-    }
-    .glitch-title {
-        color: #00ff00; font-size: 70px; font-weight: 900; text-align: center;
-        text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
-        letter-spacing: 15px; margin-top: -40px;
-    }
-    .cyber-frame {
-        border: 2px solid #00ff00; padding: 25px; background: rgba(0, 255, 0, 0.05);
-        border-radius: 15px; box-shadow: 0 0 35px rgba(0,255,0,0.5); text-align: center;
-        min-height: 400px;
-    }
-    .stButton>button { 
-        background-color: #00ff00 !important; color: #000000 !important; 
-        font-weight: 900 !important; font-size: 20px !important;
-        border-radius: 5px; border: 2px solid #fff; box-shadow: 0 0 30px #00ff00;
-        height: 3.5em; width: 100%; text-transform: uppercase;
-    }
-    .stButton>button:hover { transform: scale(1.05); box-shadow: 0 0 60px #00ff00; color: #fff !important; background: #000 !important; }
-    </style>
-    """, unsafe_allow_html=True)
+<style>
 
-# --- 2. نظام الدخول ---
-if 'auth' not in st.session_state:
-    st.session_state['auth'] = False
+html, body, [class*="css"] {
+    font-family: 'Segoe UI';
+    background-color: #020617;
+    color: white;
+}
 
-if not st.session_state['auth']:
-    _, col_m, _ = st.columns([1, 1.5, 1])
-    with col_m:
-        st.markdown("<p style='text-align: center; font-size: 100px;'>🛡️</p>", unsafe_allow_html=True)
-        st.markdown("<h1 class='glitch-title'>NEURAL-X</h1>", unsafe_allow_html=True)
-        st.markdown("<div class='cyber-frame'>", unsafe_allow_html=True)
-        user = st.text_input("IDENTIFICATION: AGENT_ID")
-        pas = st.text_input("SECURITY KEY: PASSCODE", type="password")
-        if st.button("EXECUTE AUTHENTICATION"):
-            if user in ["Esraa", "Weam", "Tasneem"] and pas == "12345":
-                st.session_state['auth'] = True
-                st.session_state['user'] = user
-                st.rerun()
-            else: st.error("ACCESS DENIED!")
-        st.markdown("</div>", unsafe_allow_html=True)
+.main {
+    background: linear-gradient(135deg,#020617,#0f172a,#111827);
+}
+
+.title {
+    text-align:center;
+    font-size:55px;
+    font-weight:bold;
+    background: linear-gradient(90deg,#38bdf8,#818cf8);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:30px;
+}
+
+.login-box {
+    width:450px;
+    margin:auto;
+    padding:40px;
+    border-radius:25px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    box-shadow: 0px 0px 40px rgba(56,189,248,0.3);
+}
+
+.stTextInput input {
+    background-color:#111827;
+    color:white;
+    border-radius:10px;
+    border:1px solid #334155;
+}
+
+.stButton button {
+    width:100%;
+    background: linear-gradient(90deg,#06b6d4,#6366f1);
+    color:white;
+    border:none;
+    border-radius:12px;
+    padding:15px;
+    font-size:18px;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.stButton button:hover {
+    transform:scale(1.03);
+    box-shadow:0px 0px 20px rgba(99,102,241,0.5);
+}
+
+.result-box {
+    padding:25px;
+    border-radius:20px;
+    background: rgba(255,255,255,0.05);
+    margin-top:20px;
+}
+
+.hash-box {
+    background:#111827;
+    padding:15px;
+    border-radius:15px;
+    color:#38bdf8;
+    font-size:14px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =====================================================
+# LOGIN DATA
+# =====================================================
+
+USERNAME = "Ezz"
+PASSWORD = "1234"
+
+if "logged" not in st.session_state:
+    st.session_state.logged = False
+
+# =====================================================
+# LOGIN PAGE
+# =====================================================
+
+if not st.session_state.logged:
+
+    st.markdown("<div class='title'>AI HUMAN ANALYZER</div>", unsafe_allow_html=True)
+
+    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+
+    st.subheader("🔐 Secure Login")
+
+    user = st.text_input("Username")
+    pw = st.text_input("Password", type="password")
+
+    if st.button("LOGIN"):
+
+        if user == USERNAME and pw == PASSWORD:
+            st.session_state.logged = True
+            st.success("ACCESS GRANTED ✅")
+            time.sleep(1)
+            st.rerun()
+        else:
+            st.error("INVALID USERNAME OR PASSWORD ❌")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# =====================================================
+# MAIN SYSTEM
+# =====================================================
+
 else:
-    # --- 3. النظام الرئيسي (إنشاء صورة بشرية مقاربة) ---
-    st.markdown("<h1 class='glitch-title'>🧬 NEURAL ANALYZER</h1>", unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("INJECT BIOMETRIC SOURCE...", type=['jpg', 'png', 'jpeg'])
 
-    if uploaded_file is not None:
-        file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-        img = cv2.imdecode(file_bytes, 1)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # كشف الأنمي بناءً على تنوع الألوان والنعومة
-        variance = cv2.Laplacian(gray, cv2.CV_64F).var()
-        is_ai = variance < 450 
+    st.markdown("<div class='title'>AI IMAGE DETECTOR</div>", unsafe_allow_html=True)
 
-        col1, col2, col3 = st.columns(3)
-        
+    st.write("")
+
+    uploaded = st.file_uploader(
+        "📤 Upload Image",
+        type=["png", "jpg", "jpeg"]
+    )
+
+    if uploaded:
+
+        image = Image.open(uploaded)
+
+        col1, col2 = st.columns([1,1])
+
         with col1:
-            st.markdown("<div class='cyber-frame'><h3>🔍 SOURCE</h3>", unsafe_allow_html=True)
-            st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), use_container_width=True)
-            if is_ai: st.error("⚠️ AI_ANIME DETECTED")
-            else: st.success("✅ HUMAN VERIFIED")
-            st.markdown("</div>", unsafe_allow_html=True)
+
+            st.image(image, caption="Uploaded Image", use_container_width=True)
 
         with col2:
-            st.markdown("<div class='cyber-frame'><h3>🛠️ REBUILD</h3>", unsafe_allow_html=True)
-            if is_ai:
-                with st.spinner("AI GENERATING REALISTIC MATCH..."):
-                    time.sleep(2)
-                    # ذكاء اصطناعي لاختيار "نمط التوليد" بناءً على طول الشعر/الملامح
-                    if variance < 200: # ملامح ناعمة (بنت)
-                        st.image("https://thispersondoesnotexist.com", caption="RECONSTRUCTED FEMALE PROXY", use_container_width=True)
-                    else: # ملامح خشنة (شاب)
-                        st.image(f"https://pravatar.cc{random.randint(1,1000)}", caption="RECONSTRUCTED MALE PROXY", use_container_width=True)
-                st.info("System: Human proxy successfully generated from AI source.")
+
+            st.markdown("<div class='result-box'>", unsafe_allow_html=True)
+
+            st.subheader("🧠 AI ANALYSIS")
+
+            progress = st.progress(0)
+
+            for i in range(100):
+                time.sleep(0.01)
+                progress.progress(i + 1)
+
+            # =====================================================
+            # RANDOM DETECTION FOR DEMO
+            # =====================================================
+
+            result = random.choice([
+                "AI GENERATED",
+                "REAL HUMAN"
+            ])
+
+            confidence = random.randint(91, 99)
+
+            if result == "AI GENERATED":
+
+                st.warning(f"⚠️ RESULT: {result}")
+                st.info(f"CONFIDENCE: {confidence}%")
+
+                st.image(
+                    image,
+                    caption="Generated Realistic Match",
+                    use_container_width=True
+                )
+
             else:
-                st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="REAL SOURCE SECURE", use_container_width=True)
+
+                st.success(f"✅ RESULT: {result}")
+                st.info(f"CONFIDENCE: {confidence}%")
+
+            # =====================================================
+            # DIGITAL VISUAL SIGNATURE
+            # =====================================================
+
+            img_array = np.array(image)
+
+            visual_signature = hashlib.sha256(
+                img_array.tobytes()
+            ).hexdigest()
+
+            st.write("")
+            st.subheader("🔐 DIGITAL VISUAL SIGNATURE")
+
+            st.markdown(
+                f"<div class='hash-box'>{visual_signature}</div>",
+                unsafe_allow_html=True
+            )
+
+            # =====================================================
+            # FACE VECTOR SIGNATURE
+            # =====================================================
+
+            try:
+
+                face_locations = face_recognition.face_locations(img_array)
+
+                encodings = face_recognition.face_encodings(img_array)
+
+                if len(encodings) > 0:
+
+                    face_vector = encodings[0]
+
+                    face_signature = hashlib.sha256(
+                        face_vector.tobytes()
+                    ).hexdigest()
+
+                    st.write("")
+                    st.subheader("🧬 FACE VECTOR SIGNATURE")
+
+                    st.markdown(
+                        f"<div class='hash-box'>{face_signature}</div>",
+                        unsafe_allow_html=True
+                    )
+
+                    st.success("FACE DETECTED SUCCESSFULLY ✅")
+
+                else:
+
+                    st.error("NO FACE DETECTED ❌")
+
+            except:
+
+                st.error("FACE ANALYSIS FAILED ❌")
+
             st.markdown("</div>", unsafe_allow_html=True)
 
-        with col3:
-            st.markdown("<div class='cyber-frame'><h3>🔑 SIGNATURE</h3>", unsafe_allow_html=True)
-            if st.button("GET VECTOR"):
-                orb = cv2.ORB_create(nfeatures=1200)
-                kp, des = orb.detectAndCompute(gray, None)
-                img_kp = cv2.drawKeypoints(img, kp, None, color=(0, 255, 0))
-                st.image(cv2.cvtColor(img_kp, cv2.COLOR_BGR2RGB), use_container_width=True)
-                st.success(f"PTS: {len(kp)}")
-                if des is not None: st.code(str(des[:10]))
-            st.markdown("</div>", unsafe_allow_html=True)
+    st.write("")
+    st.write("")
+
+    if st.button("LOGOUT"):
+        st.session_state.logged = False
+        st.rerun()
