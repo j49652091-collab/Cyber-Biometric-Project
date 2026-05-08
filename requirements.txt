@@ -1,3 +1,5 @@
 streamlit
-opencv-python-headless
+pillow
 numpy
+face_recognition
+opencv-python
