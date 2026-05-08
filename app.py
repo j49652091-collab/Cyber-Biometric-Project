@@ -33,7 +33,8 @@ if not st.session_state['auth']:
     st.markdown("<h1>BIO-CORE ACCESS</h1>", unsafe_allow_html=True)
     _, col2, _ = st.columns([1, 1.2, 1])
     with col2:
-        user = st.text_input("AGENT_ID (Esraa/Weam/Tasneem)")
+        st.write("---")
+        user = st.text_input("AGENT_ID")
         pas = st.text_input("SEC_KEY", type="password")
         if st.button("EXECUTE AUTH"):
             if user in ["Esraa", "Weam", "Tasneem"] and pas == "12345":
@@ -42,7 +43,7 @@ if not st.session_state['auth']:
             else:
                 st.error("ACCESS DENIED")
 else:
-    # --- 3. النظام الرئيسي: التحويل المنطقي لنفس الشخصية ---
+    # --- 3. النظام الرئيسي: التحليل المصحح ---
     st.markdown("<h1>🧬 NEURAL-X ANALYZER</h1>", unsafe_allow_html=True)
     
     uploaded_file = st.file_uploader("INJECT SOURCE DATA...", type=['jpg', 'png', 'jpeg'])
@@ -51,14 +52,16 @@ else:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         img = cv2.imdecode(file_bytes, 1)
         
-        # كشف الذكاء الاصطناعي/الأنمي بناءً على تحليل الألوان
-        unique_colors = len(np.unique(img.reshape(-1, img.shape), axis=0))
-        is_ai = unique_colors < 100000 
+        # --- إصلاح خطأ السطر 55 (كشف الأنمي بطريقة مستقرة) ---
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # تحليل نعومة الحواف للكشف عن الأنمي
+        variance = cv2.Laplacian(gray, cv2.CV_64F).var()
+        is_ai = variance < 450  # الأنمي عادة يكون أقل من هذا الرقم
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown("### [01] RAW SOURCE")
+            st.markdown("### RAW SOURCE")
             st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), use_container_width=True)
             if is_ai:
                 st.error("⚠️ AI/ANIME SIGNATURE DETECTED")
@@ -66,39 +69,30 @@ else:
                 st.success("✅ HUMAN SOURCE VERIFIED")
 
         with col2:
-            st.markdown("### [02] RECONSTRUCTION")
+            st.markdown("### RECONSTRUCTION")
             if is_ai:
-                with st.spinner("REBUILDING HUMAN TEXTURES..."):
+                with st.spinner("CONVERTING TO REALISTIC TEXTURE..."):
                     time.sleep(2)
-                    # معالجة حقيقية للصورة: تحويلها لدرجات رمادية ثم إعادة حدتها لتبدو بشرية
-                    # هذه الطريقة تحافظ على "نفس ملامح" الصورة المرفوعة بدقة
-                    img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
-                    img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
-                    processed_img = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
-                    # زيادة الحدة (Sharpening)
+                    # معالجة الصورة لتبدو بشرية (نفس الملامح ولكن بحدة وملمس بشري)
+                    detail_img = cv2.detailEnhance(img, sigma_s=10, sigma_r=0.15)
                     kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
-                    reconstructed = cv2.filter2D(processed_img, -1, kernel)
-                    
-                st.image(cv2.cvtColor(reconstructed, cv2.COLOR_BGR2RGB), caption="REAL-WORLD PROJECTION", use_container_width=True)
-                st.info("System: Textures re-mapped to Human standards.")
+                    reconstructed = cv2.filter2D(detail_img, -1, kernel)
+                st.image(cv2.cvtColor(reconstructed, cv2.COLOR_BGR2RGB), caption="REALISTIC PROJECTION", use_container_width=True)
             else:
                 st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="SOURCE INTEGRITY SECURE", use_container_width=True)
 
         with col3:
-            st.markdown("### [03] EXTRACTION")
+            st.markdown("### EXTRACTION")
             if st.button("EXTRACT SIGNATURE"):
-                # استخراج النقاط الحيوية
                 orb = cv2.ORB_create(nfeatures=1200)
-                kp, des = orb.detectAndCompute(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), None)
+                kp, des = orb.detectAndCompute(gray, None)
                 img_kp = cv2.drawKeypoints(img, kp, None, color=(0, 255, 0))
                 
                 st.image(cv2.cvtColor(img_kp, cv2.COLOR_BGR2RGB), use_container_width=True)
-                st.success(f"FEATURES: {len(kp)} POINTS")
+                st.success(f"FEATURES: {len(kp)}")
                 if des is not None:
                     st.code(str(des[:10]))
 
     st.sidebar.button("TERMINATE SESSION", on_click=lambda: st.session_state.update({"auth": False}))
     st.sidebar.markdown("---")
     st.sidebar.write("AGENT: **Esraa**")
-    st.sidebar.write("STATUS: **ONLINE**")
-
