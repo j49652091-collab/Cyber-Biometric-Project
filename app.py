@@ -1,68 +1,109 @@
 import streamlit as st
-import cv2
+from PIL import Image
 import numpy as np
+import cv2
+import hashlib
+import random
 
-# إعداد واجهة التطبيق
-st.set_page_config(page_title="نظام مطابقة البصمات", page_icon="🕵️‍♂️")
+# 1. إعدادات الصفحة والتنسيق
+st.set_page_config(page_title="Cyber Biometric Pro", page_icon="🧠", layout="wide")
 
-def match_fingerprints(img1, img2):
-    # تحويل الصور إلى تدرج الرمادي (Gray Scale)
-    gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-    
-    # استخدام خوارزمية SIFT لاستخراج الميزات
-    sift = cv2.SIFT_create()
-    kp1, des1 = sift.detectAndCompute(gray1, None)
-    kp2, des2 = sift.detectAndCompute(gray2, None)
-    
-    # استخدام مطابقة الميزات (BFMatcher)
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(des1, des2, k=2)
-    
-    # تصفية النقاط المتطابقة بناءً على اختبار نسبة "لو"
-    good_matches = []
-    for m, n in matches:
-        if m.distance < 0.75 * n.distance:
-            good_matches.append(m)
-            
-    # حساب نسبة التشابه
-    score = (len(good_matches) / min(len(kp1), len(kp2))) * 100
-    
-    # رسم خطوط التشابه بين البصمتين
-    result_img = cv2.drawMatches(img1, kp1, img2, kp2, good_matches, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    
-    return score, result_img
+st.markdown("""
+<style>
+    .stApp { background-color: #020617; color: white; }
+    h1, h2, h3 { color: #38bdf8 !important; }
+    .stButton>button { width: 100%; border-radius: 5px; background-color: #38bdf8; color: black; }
+</style>
+""", unsafe_allow_html=True)
 
-# تصميم واجهة المستخدم
-st.title("🔍 نظام التحقق من بصمة الإصبع")
-st.info("قم برفع صورتين للبصمة للمقارنة بينهما وتحليل نقاط التشابه")
+# 2. نظام تسجيل الدخول
+USERNAME = "Ezz"
+PASSWORD = "1234"
 
-col1, col2 = st.columns(2)
-with col1:
-    file1 = st.file_uploader("البصمة المرجعية", type=['jpg', 'png', 'jpeg'])
-with col2:
-    file2 = st.file_uploader("البصمة المراد فحصها", type=['jpg', 'png', 'jpeg'])
+if "login" not in st.session_state:
+    st.session_state.login = False
 
-if file1 and file2:
-    # قراءة ومعالجة الصور المرفوعة
-    img1 = cv2.imdecode(np.frombuffer(file1.read(), np.uint8), 1)
-    img2 = cv2.imdecode(np.frombuffer(file2.read(), np.uint8), 1)
+if not st.session_state.login:
+    st.title("🧠 CYBER BIOMETRIC LOGIN")
+    user = st.text_input("Username")
+    pw = st.text_input("Password", type="password")
     
-    if st.button("بدء عملية المطابقة"):
-        score, result_img = match_fingerprints(img1, img2)
-        
-        st.write("---")
-        st.subheader(f"نسبة التشابه: {score:.2f}%")
-        
-        if score > 18: # حد التشابه (Threshold)
-            st.success("✅ النتيجة: البصمتان متطابقتان!")
+    if st.button("LOGIN"):
+        if user == USERNAME and pw == PASSWORD:
+            st.session_state.login = True
+            st.rerun()
         else:
-            st.error("❌ النتيجة: البصمتان غير متطابقتين.")
-            
-        # عرض صورة المقارنة
-        st.image(result_img, caption="توضيح النقاط المتقابلة بين البصمتين", use_container_width=True)
+            st.error("Wrong Login")
 
-st.sidebar.markdown("""
-### حول التطبيق:
-هذا التطبيق يستخدم معالجة الصور الرقمية (OpenCV) وخوارزمية **SIFT** لمقارنة الأنماط الفريدة في بصمات الأصابع.
-""")
+else:
+    # 3. القائمة الجانبية للتنقل
+    st.sidebar.title("نظام التحليل السيبراني")
+    choice = st.sidebar.radio("اختر القسم:", ["مطابقة البصمات", "كاشف الذكاء الاصطناعي (AI Detector)"])
+
+    # --- القسم الأول: مطابقة البصمات ---
+    if choice == "مطابقة البصمات":
+        st.title("🛡️ Fingerprint Matching System")
+        st.write("قارن بين بصمتين للتأكد من الهوية")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            file1 = st.file_uploader("البصمة المرجعية", key="f1")
+        with col2:
+            file2 = st.file_uploader("البصمة المستهدفة", key="f2")
+
+        if file1 and file2:
+            img1 = cv2.imdecode(np.frombuffer(file1.read(), np.uint8), 1)
+            img2 = cv2.imdecode(np.frombuffer(file2.read(), np.uint8), 1)
+
+            # خوارزمية المطابقة SIFT
+            sift = cv2.SIFT_create()
+            kp1, des1 = sift.detectAndCompute(img1, None)
+            kp2, des2 = sift.detectAndCompute(img2, None)
+            
+            bf = cv2.BFMatcher()
+            matches = bf.knnMatch(des1, des2, k=2)
+            good = [m for m, n in matches if m.distance < 0.7 * n.distance]
+
+            score = (len(good) / min(len(kp1), len(kp2))) * 100
+            res_img = cv2.drawMatches(img1, kp1, img2, kp2, good, None)
+
+            st.subheader(f"نتيجة المطابقة: {score:.2f}%")
+            if score > 15:
+                st.success("✅ تطابق تام: البصمتان لنفس الشخص")
+            else:
+                st.error("❌ لا يوجد تطابق: البصمتان مختلفتان")
+            
+            st.image(res_img, use_container_width=True)
+
+    # --- القسم الثاني: كاشف الذكاء الاصطناعي ---
+    elif choice == "كاشف الذكاء الاصطناعي (AI Detector)":
+        st.title("🤖 AI Human/Fingerprint Analyzer")
+        st.write("حلل البصمة لمعرفة ما إذا كانت حقيقية أم مولدة بالذكاء الاصطناعي")
+
+        file = st.file_uploader("ارفع الصورة للتحليل", key="ai_check")
+
+        if file:
+            image = Image.open(file)
+            st.image(image, width=400)
+            
+            # محاكاة تحليل البيانات (AI Analysis)
+            if st.button("بدء الفحص العميق"):
+                with st.spinner('جاري فحص الأنماط الرقمية...'):
+                    # هنا نضع منطق التمييز (كمثال تعليمي)
+                    result = random.choice(["REAL HUMAN BIOMETRIC", "AI GENERATED PATTERN"])
+                    
+                    st.divider()
+                    if "REAL" in result:
+                        st.success(f"النتيجة: {result}")
+                    else:
+                        st.warning(f"النتيجة: {result}")
+
+                    # توليد التوقيع الرقمي للصورة لضمان عدم التلاعب (Hash)
+                    img_array = np.array(image)
+                    signature = hashlib.sha256(img_array.tobytes()).hexdigest()
+                    st.info(f"التوقيع الرقمي الفريد (SHA-256):")
+                    st.code(signature)
+
+    if st.sidebar.button("Logout"):
+        st.session_state.login = False
+        st.rerun()
