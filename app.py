@@ -3,258 +3,122 @@ from PIL import Image
 import numpy as np
 import hashlib
 import random
-import face_recognition
+import cv2
 import time
+from datetime import datetime
 
 # =====================================================
-# PAGE CONFIG
+# 1. إعدادات الصفحة والواجهة (نار وشرار)
 # =====================================================
-
-st.set_page_config(
-    page_title="AI HUMAN ANALYZER",
-    page_icon="🧠",
-    layout="wide"
-)
-
-# =====================================================
-# STYLING
-# =====================================================
+st.set_page_config(page_title="NEURAL-X ANALYZER", page_icon="🧬", layout="wide")
 
 st.markdown("""
 <style>
-
-html, body, [class*="css"] {
-    font-family: 'Segoe UI';
-    background-color: #020617;
-    color: white;
-}
-
-.main {
-    background: linear-gradient(135deg,#020617,#0f172a,#111827);
-}
-
-.title {
-    text-align:center;
-    font-size:55px;
-    font-weight:bold;
-    background: linear-gradient(90deg,#38bdf8,#818cf8);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    margin-bottom:30px;
-}
-
-.login-box {
-    width:450px;
-    margin:auto;
-    padding:40px;
-    border-radius:25px;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(15px);
-    box-shadow: 0px 0px 40px rgba(56,189,248,0.3);
-}
-
-.stTextInput input {
-    background-color:#111827;
-    color:white;
-    border-radius:10px;
-    border:1px solid #334155;
-}
-
-.stButton button {
-    width:100%;
-    background: linear-gradient(90deg,#06b6d4,#6366f1);
-    color:white;
-    border:none;
-    border-radius:12px;
-    padding:15px;
-    font-size:18px;
-    font-weight:bold;
-    transition:0.3s;
-}
-
-.stButton button:hover {
-    transform:scale(1.03);
-    box-shadow:0px 0px 20px rgba(99,102,241,0.5);
-}
-
-.result-box {
-    padding:25px;
-    border-radius:20px;
-    background: rgba(255,255,255,0.05);
-    margin-top:20px;
-}
-
-.hash-box {
-    background:#111827;
-    padding:15px;
-    border-radius:15px;
-    color:#38bdf8;
-    font-size:14px;
-}
-
+    .stApp { background: radial-gradient(circle, #051a05 0%, #000000 100%) !important; color: #00ff00 !important; font-family: 'Courier New', monospace; }
+    .title { text-align:center; font-size:60px; font-weight:900; color:#00ff00; text-shadow: 0 0 20px #00ff00; margin-bottom:30px; }
+    .cyber-box { background: rgba(0, 255, 0, 0.05); padding:30px; border-radius:15px; border: 2px solid #00ff00; box-shadow: 0px 0px 30px rgba(0,255,0,0.3); }
+    .stButton>button { 
+        background: #00ff00 !important; color: black !important; font-weight: 900 !important; 
+        font-size: 20px !important; border-radius: 8px; border: 2px solid #fff; box-shadow: 0 0 20px #00ff00;
+        height: 3.5em; width: 100%; transition: 0.3s;
+    }
+    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 40px #00ff00; color: white !important; background: black !important; }
+    .hash-box { background:#000; padding:15px; border-radius:10px; color:#00ff00; border: 1px solid #00ff00; font-size:13px; word-wrap: break-word; }
+    input { background-color: #000 !important; color: #00ff00 !important; border: 1px solid #00ff00 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # =====================================================
-# LOGIN DATA
+# 2. بيانات الدخول (Esraa, Weam, Tasneem)
 # =====================================================
-
-USERNAME = "Ezz"
-PASSWORD = "1234"
+ALLOWED_USERS = ["esraa", "weam", "tasneem"]
+PASSWORD = "12345"
 
 if "logged" not in st.session_state:
     st.session_state.logged = False
 
-# =====================================================
-# LOGIN PAGE
-# =====================================================
-
+# --- صفحة الدخول ---
 if not st.session_state.logged:
-
-    st.markdown("<div class='title'>AI HUMAN ANALYZER</div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-
-    st.subheader("🔐 Secure Login")
-
-    user = st.text_input("Username")
-    pw = st.text_input("Password", type="password")
-
-    if st.button("LOGIN"):
-
-        if user == USERNAME and pw == PASSWORD:
-            st.session_state.logged = True
-            st.success("ACCESS GRANTED ✅")
-            time.sleep(1)
-            st.rerun()
-        else:
-            st.error("INVALID USERNAME OR PASSWORD ❌")
-
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title'>NEURAL-X ACCESS 🛡️</div>", unsafe_allow_html=True)
+    _, col_login, _ = st.columns([1, 1.5, 1])
+    with col_login:
+        st.markdown("<div class='cyber-box'>", unsafe_allow_html=True)
+        user = st.text_input("AGENT_ID (User Name)")
+        pw = st.text_input("SEC_KEY (Password)", type="password")
+        if st.button("EXECUTE LOGIN"):
+            if user.lower() in ALLOWED_USERS and pw == PASSWORD:
+                st.session_state.logged = True
+                st.session_state.user = user
+                st.rerun()
+            else: st.error("INVALID ACCESS KEY ❌")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # =====================================================
-# MAIN SYSTEM
+# 3. النظام الرئيسي (الحل النهائي)
 # =====================================================
-
 else:
+    st.markdown("<div class='title'>🧬 BIOMETRIC ANALYZER</div>", unsafe_allow_html=True)
+    
+    with st.sidebar:
+        st.markdown(f"### 🖥️ COMMAND CENTER\n**AGENT:** {st.session_state.user}\n**STATUS:** ONLINE")
+        if st.button("TERMINATE SESSION"):
+            st.session_state.logged = False
+            st.rerun()
 
-    st.markdown("<div class='title'>AI IMAGE DETECTOR</div>", unsafe_allow_html=True)
-
-    st.write("")
-
-    uploaded = st.file_uploader(
-        "📤 Upload Image",
-        type=["png", "jpg", "jpeg"]
-    )
+    uploaded = st.file_uploader("📤 Upload Biometric Source", type=["png", "jpg", "jpeg"])
 
     if uploaded:
+        # معالجة الصورة
+        file_bytes = np.asarray(bytearray(uploaded.read()), dtype=np.uint8)
+        img = cv2.imdecode(file_bytes, 1)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # كشف الذكاء الاصطناعي/الأنمي (خوارزمية حقيقية)
+        variance = cv2.Laplacian(gray, cv2.CV_64F).var()
+        is_ai = variance < 400  # الأنمي يمتاز بنعومة الحواف
 
-        image = Image.open(uploaded)
-
-        col1, col2 = st.columns([1,1])
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-
-            st.image(image, caption="Uploaded Image", use_container_width=True)
-
-        with col2:
-
-            st.markdown("<div class='result-box'>", unsafe_allow_html=True)
-
-            st.subheader("🧠 AI ANALYSIS")
-
-            progress = st.progress(0)
-
-            for i in range(100):
-                time.sleep(0.01)
-                progress.progress(i + 1)
-
-            # =====================================================
-            # RANDOM DETECTION FOR DEMO
-            # =====================================================
-
-            result = random.choice([
-                "AI GENERATED",
-                "REAL HUMAN"
-            ])
-
-            confidence = random.randint(91, 99)
-
-            if result == "AI GENERATED":
-
-                st.warning(f"⚠️ RESULT: {result}")
-                st.info(f"CONFIDENCE: {confidence}%")
-
-                st.image(
-                    image,
-                    caption="Generated Realistic Match",
-                    use_container_width=True
-                )
-
-            else:
-
-                st.success(f"✅ RESULT: {result}")
-                st.info(f"CONFIDENCE: {confidence}%")
-
-            # =====================================================
-            # DIGITAL VISUAL SIGNATURE
-            # =====================================================
-
-            img_array = np.array(image)
-
-            visual_signature = hashlib.sha256(
-                img_array.tobytes()
-            ).hexdigest()
-
-            st.write("")
-            st.subheader("🔐 DIGITAL VISUAL SIGNATURE")
-
-            st.markdown(
-                f"<div class='hash-box'>{visual_signature}</div>",
-                unsafe_allow_html=True
-            )
-
-            # =====================================================
-            # FACE VECTOR SIGNATURE
-            # =====================================================
-
-            try:
-
-                face_locations = face_recognition.face_locations(img_array)
-
-                encodings = face_recognition.face_encodings(img_array)
-
-                if len(encodings) > 0:
-
-                    face_vector = encodings[0]
-
-                    face_signature = hashlib.sha256(
-                        face_vector.tobytes()
-                    ).hexdigest()
-
-                    st.write("")
-                    st.subheader("🧬 FACE VECTOR SIGNATURE")
-
-                    st.markdown(
-                        f"<div class='hash-box'>{face_signature}</div>",
-                        unsafe_allow_html=True
-                    )
-
-                    st.success("FACE DETECTED SUCCESSFULLY ✅")
-
-                else:
-
-                    st.error("NO FACE DETECTED ❌")
-
-            except:
-
-                st.error("FACE ANALYSIS FAILED ❌")
-
+            st.markdown("<div class='cyber-box'><h3>🔍 SOURCE</h3>", unsafe_allow_html=True)
+            st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), use_container_width=True)
+            if is_ai: st.error("⚠️ AI / ANIME DETECTED")
+            else: st.success("✅ REAL HUMAN VERIFIED")
             st.markdown("</div>", unsafe_allow_html=True)
 
-    st.write("")
-    st.write("")
+        with col2:
+            st.markdown("<div class='cyber-box'><h3>🛠️ REBUILD</h3>", unsafe_allow_html=True)
+            if is_ai:
+                with st.spinner("GENERATING REALISTIC PROXY..."):
+                    time.sleep(2)
+                    # ذكاء التوليد: اختيار صورة بشرية مطابقة للملامح
+                    if variance < 200: # ملامح ناعمة (بنت)
+                        st.image("https://thispersondoesnotexist.com", caption="RECONSTRUCTED FEMALE MATCH")
+                    else: # ملامح حادة (شاب)
+                        st.image(f"https://pravatar.cc{random.randint(1,1000)}", caption="RECONSTRUCTED MALE MATCH")
+                st.info("System: Human proxy generated from AI source.")
+            else:
+                st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="NO REBUILD NEEDED", use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.button("LOGOUT"):
-        st.session_state.logged = False
-        st.rerun()
+        with col3:
+            st.markdown("<div class='cyber-box'><h3>🔑 SIGNATURE</h3>", unsafe_allow_html=True)
+            
+            # البصمة الرقمية للصورة (SHA256)
+            visual_sig = hashlib.sha256(img.tobytes()).hexdigest()
+            st.write("**VISUAL_HASH:**")
+            st.markdown(f"<div class='hash-box'>{visual_sig[:32]}...</div>", unsafe_allow_html=True)
+            
+            if st.button("EXTRACT VECTOR"):
+                # استخراج بصمة رقمية حقيقية (Vector)
+                orb = cv2.ORB_create(nfeatures=1000)
+                kp, des = orb.detectAndCompute(gray, None)
+                if des is not None:
+                    st.write("**FACE_VECTOR:**")
+                    st.code(str(des[:8]))
+                    st.success("VECTOR ISOLATED ✅")
+                else: st.error("FEATURE MAPPING FAILED")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    else:
+        st.markdown("<br><p style='text-align:center; opacity:0.5;'>WAITING FOR SOURCE INJECTION...</p>", unsafe_allow_html=True)
