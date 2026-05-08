@@ -5,18 +5,28 @@ import cv2
 import hashlib
 import random
 
-# 1. إعدادات الصفحة والتنسيق
+# 1. Page Configuration
 st.set_page_config(page_title="Cyber Biometric Pro", page_icon="🧠", layout="wide")
 
+# 2. CSS for Centering Login and Styling
 st.markdown("""
 <style>
     .stApp { background-color: #020617; color: white; }
-    h1, h2, h3 { color: #38bdf8 !important; }
-    .stButton>button { width: 100%; border-radius: 5px; background-color: #38bdf8; color: black; }
+    h1, h2, h3 { color: #38bdf8 !important; text-align: center; }
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    .big-font { font-size: 50px !important; font-weight: bold; }
+    .stButton>button { width: 100%; border-radius: 5px; background-color: #38bdf8; color: black; font-weight: bold; }
+    p { text-align: center; font-size: 20px; }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. نظام تسجيل الدخول
+# 3. Login System
 USERNAME = "Ezz"
 PASSWORD = "1234"
 
@@ -24,38 +34,41 @@ if "login" not in st.session_state:
     st.session_state.login = False
 
 if not st.session_state.login:
-    st.title("🧠 CYBER BIOMETRIC LOGIN")
-    user = st.text_input("Username")
-    pw = st.text_input("Password", type="password")
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    st.markdown('<p class="big-font">🧠 CYBER BIOMETRIC LOGIN</p>', unsafe_allow_html=True)
     
-    if st.button("LOGIN"):
-        if user == USERNAME and pw == PASSWORD:
-            st.session_state.login = True
-            st.rerun()
-        else:
-            st.error("Wrong Login")
+    # Centering inputs using columns
+    col_a, col_b, col_c = st.columns([1, 2, 1])
+    with col_b:
+        user = st.text_input("USERNAME")
+        pw = st.text_input("PASSWORD", type="password")
+        if st.button("LOGIN"):
+            if user == USERNAME and pw == PASSWORD:
+                st.session_state.login = True
+                st.rerun()
+            else:
+                st.error("Access Denied: Wrong Credentials")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # 3. القائمة الجانبية للتنقل
-    st.sidebar.title("نظام التحليل السيبراني")
-    choice = st.sidebar.radio("اختر القسم:", ["مطابقة البصمات", "كاشف الذكاء الاصطناعي (AI Detector)"])
+    # 4. Sidebar Navigation (English Only)
+    st.sidebar.title("Navigation")
+    choice = st.sidebar.radio("Go to:", ["Fingerprint Matcher", "AI Detection System"])
 
-    # --- القسم الأول: مطابقة البصمات ---
-    if choice == "مطابقة البصمات":
-        st.title("🛡️ Fingerprint Matching System")
-        st.write("قارن بين بصمتين للتأكد من الهوية")
-
+    # --- Section 1: Fingerprint Matcher ---
+    if choice == "Fingerprint Matcher":
+        st.title("🛡️ FINGERPRINT MATCHING SYSTEM")
+        
         col1, col2 = st.columns(2)
         with col1:
-            file1 = st.file_uploader("البصمة المرجعية", key="f1")
+            file1 = st.file_uploader("Upload Reference Base", key="f1")
         with col2:
-            file2 = st.file_uploader("البصمة المستهدفة", key="f2")
+            file2 = st.file_uploader("Upload Target Sample", key="f2")
 
         if file1 and file2:
             img1 = cv2.imdecode(np.frombuffer(file1.read(), np.uint8), 1)
             img2 = cv2.imdecode(np.frombuffer(file2.read(), np.uint8), 1)
 
-            # خوارزمية المطابقة SIFT
             sift = cv2.SIFT_create()
             kp1, des1 = sift.detectAndCompute(img1, None)
             kp2, des2 = sift.detectAndCompute(img2, None)
@@ -67,43 +80,43 @@ else:
             score = (len(good) / min(len(kp1), len(kp2))) * 100
             res_img = cv2.drawMatches(img1, kp1, img2, kp2, good, None)
 
-            st.subheader(f"نتيجة المطابقة: {score:.2f}%")
+            st.subheader(f"Matching Score: {score:.2f}%")
             if score > 15:
-                st.success("✅ تطابق تام: البصمتان لنفس الشخص")
+                st.success("MATCH SUCCESSFUL: BIOMETRIC IDENTITY VERIFIED")
             else:
-                st.error("❌ لا يوجد تطابق: البصمتان مختلفتان")
+                st.error("MATCH FAILED: UNKNOWN IDENTITY")
             
             st.image(res_img, use_container_width=True)
 
-    # --- القسم الثاني: كاشف الذكاء الاصطناعي ---
-    elif choice == "كاشف الذكاء الاصطناعي (AI Detector)":
-        st.title("🤖 AI Human/Fingerprint Analyzer")
-        st.write("حلل البصمة لمعرفة ما إذا كانت حقيقية أم مولدة بالذكاء الاصطناعي")
-
-        file = st.file_uploader("ارفع الصورة للتحليل", key="ai_check")
+    # --- Section 2: AI Detection & Human Generation ---
+    elif choice == "AI Detection System":
+        st.title("🤖 AI ANALYSIS & HUMAN RECONSTRUCTION")
+        
+        file = st.file_uploader("Upload Image for Scanning", key="ai_check")
 
         if file:
             image = Image.open(file)
-            st.image(image, width=400)
+            st.image(image, caption="Uploaded Scan", width=400)
             
-            # محاكاة تحليل البيانات (AI Analysis)
-            if st.button("بدء الفحص العميق"):
-                with st.spinner('جاري فحص الأنماط الرقمية...'):
-                    # هنا نضع منطق التمييز (كمثال تعليمي)
-                    result = random.choice(["REAL HUMAN BIOMETRIC", "AI GENERATED PATTERN"])
-                    
-                    st.divider()
-                    if "REAL" in result:
-                        st.success(f"النتيجة: {result}")
-                    else:
-                        st.warning(f"النتيجة: {result}")
+            if st.button("START DEEP SCAN"):
+                with st.spinner('Scanning Neural Patterns...'):
+                    # Simulated logic: if user uploads, it detects AI (for the demo)
+                    result = "AI GENERATED" 
+                    st.warning(f"RESULT: {result}")
 
-                    # توليد التوقيع الرقمي للصورة لضمان عدم التلاعب (Hash)
+                    st.divider()
+                    st.subheader("RECONSTRUCTING REAL HUMAN DATA...")
+                    # Generating a "Real Human" equivalent using a high-quality placeholder
+                    # Each click gives a new real-looking person
+                    random_id = random.randint(1, 1000)
+                    st.image(f"https://picsum.photos{random_id}", caption="Equivalent Real Human Profile")
+
+                    # Security Hash
                     img_array = np.array(image)
                     signature = hashlib.sha256(img_array.tobytes()).hexdigest()
-                    st.info(f"التوقيع الرقمي الفريد (SHA-256):")
+                    st.info("DIGITAL SIGNATURE (SHA-256):")
                     st.code(signature)
 
-    if st.sidebar.button("Logout"):
+    if st.sidebar.button("LOGOUT"):
         st.session_state.login = False
         st.rerun()
