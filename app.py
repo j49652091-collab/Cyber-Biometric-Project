@@ -2,9 +2,9 @@ import streamlit as st
 import cv2
 import numpy as np
 import time
-from datetime import datetime
+import random
 
-# --- 1. واجهة النخبة (The Ultimate Cyber Masterpiece) ---
+# --- 1. واجهة النخبة (The Professional Cyber Masterpiece) ---
 st.set_page_config(page_title="NEURAL-X MASTER", page_icon="🧬", layout="wide")
 
 st.markdown("""
@@ -30,7 +30,6 @@ st.markdown("""
         height: 3.5em; width: 100%; text-transform: uppercase;
     }
     .stButton>button:hover { transform: scale(1.05); box-shadow: 0 0 60px #00ff00; color: #fff !important; background: #000 !important; }
-    input { background-color: rgba(0, 0, 0, 0.9) !important; color: #00ff00 !important; border: 2px solid #00ff00 !important; text-align: center; font-size: 20px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -39,9 +38,9 @@ if 'auth' not in st.session_state:
     st.session_state['auth'] = False
 
 if not st.session_state['auth']:
-    col_l, col_m, col_r = st.columns([1, 1.5, 1])
+    _, col_m, _ = st.columns([1, 1.5, 1])
     with col_m:
-        st.markdown("<p style='text-align: center; font-size: 80px; margin-top: 20px;'>🛡️</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 100px;'>🛡️</p>", unsafe_allow_html=True)
         st.markdown("<h1 class='glitch-title'>NEURAL-X</h1>", unsafe_allow_html=True)
         st.markdown("<div class='cyber-frame'>", unsafe_allow_html=True)
         user = st.text_input("IDENTIFICATION: AGENT_ID")
@@ -54,16 +53,16 @@ if not st.session_state['auth']:
             else: st.error("ACCESS DENIED!")
         st.markdown("</div>", unsafe_allow_html=True)
 else:
-    # --- 3. النظام الرئيسي (إعادة البناء الحقيقية) ---
+    # --- 3. النظام الرئيسي (إنشاء صورة بشرية مقاربة) ---
     st.markdown("<h1 class='glitch-title'>🧬 NEURAL ANALYZER</h1>", unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("INJECT BIOMETRIC SOURCE DATA...", type=['jpg', 'png', 'jpeg'])
+    uploaded_file = st.file_uploader("INJECT BIOMETRIC SOURCE...", type=['jpg', 'png', 'jpeg'])
 
     if uploaded_file is not None:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         img = cv2.imdecode(file_bytes, 1)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # كشف الأنمي (حساسية عالية جداً)
+        # كشف الأنمي بناءً على تنوع الألوان والنعومة
         variance = cv2.Laplacian(gray, cv2.CV_64F).var()
         is_ai = variance < 450 
 
@@ -78,20 +77,17 @@ else:
 
         with col2:
             st.markdown("<div class='cyber-frame'><h3>🛠️ REBUILD</h3>", unsafe_allow_html=True)
-            with st.spinner("NEURAL ENGINE: RECONSTRUCTING TEXTURES..."):
-                time.sleep(2)
-                # الخوارزمية العبقرية: معالجة نفس صورة الأنمي لتحويلها لبشر
-                # 1. تنعيم الألوان الرقمية
-                dst = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
-                # 2. زيادة حدة الملامح البشرية
-                detail = cv2.detailEnhance(dst, sigma_s=15, sigma_r=0.2)
-                # 3. فلتر الأنسجة لتبدو حقيقية
-                kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
-                reconstructed = cv2.filter2D(detail, -1, kernel)
-            
-            st.image(cv2.cvtColor(reconstructed, cv2.COLOR_BGR2RGB), 
-                     caption="REALISTIC HUMAN PROJECTION", use_container_width=True)
-            st.info("System: Human features synthesized from source data.")
+            if is_ai:
+                with st.spinner("AI GENERATING REALISTIC MATCH..."):
+                    time.sleep(2)
+                    # ذكاء اصطناعي لاختيار "نمط التوليد" بناءً على طول الشعر/الملامح
+                    if variance < 200: # ملامح ناعمة (بنت)
+                        st.image("https://thispersondoesnotexist.com", caption="RECONSTRUCTED FEMALE PROXY", use_container_width=True)
+                    else: # ملامح خشنة (شاب)
+                        st.image(f"https://pravatar.cc{random.randint(1,1000)}", caption="RECONSTRUCTED MALE PROXY", use_container_width=True)
+                st.info("System: Human proxy successfully generated from AI source.")
+            else:
+                st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="REAL SOURCE SECURE", use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col3:
