@@ -28,7 +28,7 @@ if "login" not in st.session_state:
 
 if not st.session_state.login:
     st.markdown('<p class="big-title">CYBER BIOMETRIC LOGIN</p>', unsafe_allow_html=True)
-    col_a, col_b, col_c = st.columns(3) # تم إصلاح القوس هنا لمنع خطأ الـ TypeError
+    col_a, col_b, col_c = st.columns(3)
     with col_b:
         user = st.text_input("USERNAME")
         pw = st.text_input("PASSWORD", type="password")
@@ -76,34 +76,30 @@ else:
                     if len(open_cv_image.shape) == 3:
                         gray_img = cv2.cvtColor(open_cv_image, cv2.COLOR_RGB2GRAY)
                         hsv_img = cv2.cvtColor(open_cv_image, cv2.COLOR_RGB2HSV)
+                        # فصل القنوات وحساب الانحراف المعياري لقناة التشبع اللوني (S) بدقة لمنع الـ ValueError
+                        _, s_channel, _ = cv2.split(hsv_img)
+                        _, std_dev_saturation = cv2.meanStdDev(s_channel)
+                        std_dev_saturation = std_dev_saturation[0][0]
                     else:
                         gray_img = open_cv_image
-                        hsv_img = cv2.cvtColor(cv2.cvtColor(open_cv_image, cv2.COLOR_GRAY2RGB), cv2.COLOR_RGB2HSV)
+                        std_dev_saturation = 0 # الصورة بالأصل رمادية، لا يوجد تشبع لوني فاقع للأنمي
 
-                    # 1. قياس التسطح اللوني ومساحات المصمت (فحص الأنمي والرسومات)
-                    # رسومات الأنمي تتميز بوجود عدد قليل جداً من التدرجات المتنوعة مقارنة بالصور الواقعية
-                    # نقوم بحساب الانحراف المعياري لدرجة تشبع الألوان وقناة الإضاءة
-                    _, std_dev_saturation, _ = cv2.meanStdDev(hsv_img)
+                    # 1. حساب مساحات المصمت وعدد الألوان الفريدة
                     unique_colors = len(np.unique(gray_img))
                     
-                    # 2. قياس ملمس الحواف الدقيقة ونسبة النعومة (فحص صور الـ AI الواقعية ضد البشر الحقيقيين)
+                    # 2. قياس ملمس الحواف الدقيقة ونسبة النعومة
                     blur_score = cv2.Laplacian(gray_img, cv2.CV_64F).var()
 
-                    # 3. محرك التصنيف الأكاديمي الشامل (Comprehensive Decision Engine)
-                    # إذا كانت الألوان محددة ومسطحة جداً (سمة رسومات الـ 2D والأنمي الرقمي)
-                    if unique_colors < 160 or std_dev_saturation[0][0] > 70:
+                    # 3. محرك التصنيف الأكاديمي الشامل
+                    if unique_colors < 160 or std_dev_saturation > 70:
                         status = "ANIME_DIGITAL"
                         ai_probability = 99
                         detection_reason = "DIGITAL ARTWORK / ANIME TEXTURE DETECTED"
-                    
-                    # إذا كانت صورة واقعية ولكن نسيجها منعم رقمياً بشكل مفرط (سمة صور الـ AI التوليدية)
                     elif blur_score < 250:
                         status = "AI_GENERATED"
                         ai_probability = int(95 - (blur_score / 10))
                         ai_probability = max(50, min(95, ai_probability))
                         detection_reason = "AI GENERATED TEXTURE ARTIFACTS (HIGH SMOOTHNESS)"
-                    
-                    # إذا كانت صورة تحتوي على نويز ومسامات كاميرا طبيعية (بشر حقيقي)
                     else:
                         status = "REAL_HUMAN"
                         ai_probability = int(max(5, min(35, 3000 / blur_score)))
