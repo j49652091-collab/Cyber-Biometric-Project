@@ -4,6 +4,8 @@ import numpy as np
 import cv2
 import hashlib
 import random
+import requests  # تذكر إضافة هذه المكتبة في الأعلى
+from io import BytesIO
 
 # 1. Page Configuration
 st.set_page_config(page_title="Cyber Biometric Pro", page_icon="🧠", layout="wide")
@@ -66,16 +68,22 @@ else:
             if st.button("EXECUTE DEEP SCAN"):
                 with st.spinner('Analyzing...'):
                     img_array = np.array(image)
-                    # Logic: Toggle based on image mean for demo variety
                     is_ai = img_array.mean() > 110 
                     
                     if is_ai:
                         st.warning("RESULT: AI GENERATED PATTERN")
                         st.divider()
                         st.subheader("RECONSTRUCTING TO REAL HUMAN DATA...")
-                        # Small fixed size for the generated image
-                        seed = random.randint(1, 1000)
-                        st.image(f"https://thispersondoesnotexist.com?{seed}", caption="Reconstructed Human Profile", width=250)
+                        
+                        # كود جلب الصورة بعد تخطي حماية الموقع
+                        try:
+                            url = "https://thispersondoesnotexist.com"
+                            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+                            response = requests.get(url, headers=headers)
+                            ai_person_img = Image.open(BytesIO(response.content))
+                            st.image(ai_person_img, caption="Reconstructed Human Profile", width=250)
+                        except Exception as e:
+                            st.error("فشل الاتصال بموقع توليد الصور، يرجى المحاولة لاحقاً.")
                     else:
                         st.success("RESULT: REAL HUMAN BIOMETRIC")
                         st.info("No reconstruction needed for verified human data.")
