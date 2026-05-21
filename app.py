@@ -28,7 +28,8 @@ if "login" not in st.session_state:
 
 if not st.session_state.login:
     st.markdown('<p class="big-title">CYBER BIOMETRIC LOGIN</p>', unsafe_allow_html=True)
-    col_a, col_b, col_c = st.columns()
+    col_a, col_b, col_c = st.columns(3)
+
     with col_b:
         user = st.text_input("USERNAME")
         pw = st.text_input("PASSWORD", type="password")
